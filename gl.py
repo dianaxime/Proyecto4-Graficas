@@ -131,14 +131,14 @@ def glize(node):
 
 i = glm.mat4()
 
-def createTheMatrix(counter):
-	translate = glm.translate(i, glm.vec3(-counter, 0, 0))
+def createTheMatrix(counter, x, y):
+	translate = glm.translate(i, glm.vec3(counter, 0, 0))
 	rotate = glm.rotate(i, glm.radians(-90), glm.vec3(0, 1, 0))
 	scale = glm.scale(i, glm.vec3(0.3, 0.3, 0.3))
 
 	model = translate * rotate * scale
-	view = glm.lookAt(glm.vec3(0, 0, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
-	projection = glm.perspective(glm.radians(45 + counter/10), 800/600, 0.1, 1000)
+	view = glm.lookAt(glm.vec3(0 + x, 0 + y, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
+	projection = glm.perspective(glm.radians(45), 800/600, 0.1, 1000)
 
 	return projection * view * model
 
@@ -147,14 +147,17 @@ glViewport(0, 0, 800, 600)
 glEnable(GL_DEPTH_TEST)
 
 running = True
+paused = False
 counter = 0
+x = 0
+y = 0
 while running:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	glClearColor(0.04, 0.37, 0.89, 1.0)
 
 	glUseProgram(shader)
 
-	theMatrix = createTheMatrix(counter)
+	theMatrix = createTheMatrix(counter, x, y)
 
 	theMatrixLocation = glGetUniformLocation(shader, 'theMatrix')
 
@@ -181,9 +184,18 @@ while running:
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 			if event.key == pygame.K_f:
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+			if event.key == pygame.K_LEFT:
+				x -= 10
+			if event.key == pygame.K_RIGHT:
+				x += 10
+			if event.key == pygame.K_UP:
+				y += 10
+			if event.key == pygame.K_DOWN:
+				y -= 10
+			if event.key == pygame.K_SPACE:
+				paused = not paused
 
-
-
-
-	counter += 1
+	if not paused:
+		counter += 1
+	
 	clock.tick(30)
