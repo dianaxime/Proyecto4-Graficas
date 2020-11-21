@@ -132,9 +132,9 @@ def glize(node):
 i = glm.mat4()
 
 def createTheMatrix(counter):
-	translate = glm.translate(i, glm.vec3(0, 0, 0))
-	rotate = glm.rotate(i, glm.radians(counter), glm.vec3(0, 1, 0))
-	scale = glm.scale(i, glm.vec3(1, 1, 1))
+	translate = glm.translate(i, glm.vec3(counter, 0, 0))
+	rotate = glm.rotate(i, glm.radians(90), glm.vec3(0, 1, 0))
+	scale = glm.scale(i, glm.vec3(0.3, 0.3, 0.3))
 
 	model = translate * rotate * scale
 	view = glm.lookAt(glm.vec3(0, 0, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
