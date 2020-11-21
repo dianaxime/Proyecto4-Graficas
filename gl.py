@@ -138,7 +138,7 @@ def createTheMatrix(counter):
 
 	model = translate * rotate * scale
 	view = glm.lookAt(glm.vec3(0, 0, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
-	projection = glm.perspective(glm.radians(45), 800/600, 0.1, 1000)
+	projection = glm.perspective(glm.radians(45 + counter/10), 800/600, 0.1, 1000)
 
 	return projection * view * model
 
