@@ -21,10 +21,12 @@ uniform vec3 light;
 
 out float intensity;
 out vec2 vertexTexcoords;
+out vec3 lPosition;
 
 void main()
 {
 	vertexTexcoords = texcoords;
+	lPosition = position;
 	intensity = dot(normal, normalize(light));
 	gl_Position = theMatrix * vec4(position.x, position.y, position.z, 1.0);
 }
@@ -36,6 +38,7 @@ layout(location = 0) out vec4 fragColor;
 
 in float intensity;
 in vec2 vertexTexcoords;
+in vec3 lPosition;
 
 uniform sampler2D tex;
 uniform vec4 diffuse;
@@ -44,7 +47,7 @@ uniform vec4 ambient;
 void main()
 {
 
-	fragColor = ambient + diffuse * texture(tex, vertexTexcoords) * intensity;
+	fragColor = vec4(lPosition.x * 5.0, lPosition.y * 8.0, lPosition.z * 5.0, 1.0) * intensity;
 }
 """
 
@@ -52,7 +55,6 @@ shader = compileProgram(
 		compileShader(vertex_shader, GL_VERTEX_SHADER),
 		compileShader(fragment_shader, GL_FRAGMENT_SHADER)
 )
-
 
 scene = pyassimp.load('./TropicalFish15.obj')
 
@@ -84,6 +86,7 @@ def glize(node):
 			numpy.array(mesh.normals, dtype=numpy.float32),
 			numpy.array(mesh.texturecoords[0], dtype=numpy.float32),
 		])
+
 
 		index_data = numpy.hstack(
 			numpy.array(mesh.faces, dtype=numpy.int32),
