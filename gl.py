@@ -18,14 +18,17 @@ layout (location = 2) in vec2 texcoords;
 
 uniform mat4 theMatrix;
 uniform vec3 light;
+uniform vec4 color;
 
 out float intensity;
 out vec2 vertexTexcoords;
+out vec4 vertexColor;
 
 void main()
 {
 	vertexTexcoords = texcoords;
-	intensity = dot(normal, normalize(light));
+	float intensity = dot(normal, normalize(light - position));
+	vertexColor = color * intensity;
 	gl_Position = theMatrix * vec4(position.x, position.y, position.z, 1.0);
 }
 """
@@ -36,6 +39,7 @@ layout(location = 0) out vec4 fragColor;
 
 in float intensity;
 in vec2 vertexTexcoords;
+in vec4 vertexColor;
 
 uniform sampler2D tex;
 uniform vec4 diffuse;
@@ -44,7 +48,7 @@ uniform vec4 ambient;
 void main()
 {
 
-	fragColor = ambient + diffuse * texture(tex, vertexTexcoords) * intensity;
+	fragColor = vertexColor * texture(tex, vertexTexcoords);
 }
 """
 
@@ -60,9 +64,9 @@ def glize(node):
 	# render
 	for mesh in node.meshes:
 		material = dict(mesh.material.properties.items())
-		texture_name = material['file'][:-9]
-		#print(texture_name[:-9])
-		texture_surface = pygame.image.load('./Castle/Texture/'+texture_name)
+		texture_name = material['file'][:-18].rstrip() + '.jpg'
+		#print(texture_name)
+		texture_surface = pygame.image.load('./Castle/Texture/'+ texture_name)
 		texture_data = pygame.image.tostring(texture_surface, 'RGB')
 		width = texture_surface.get_width()
 		height = texture_surface.get_height()
@@ -111,12 +115,18 @@ def glize(node):
 
 		glUniform3f(
 			glGetUniformLocation(shader, "light"),
-			-100, 300, 0
+			-100, 150, 160
 		)
 
 		glUniform4f(
 			glGetUniformLocation(shader, "diffuse"),
-			0.6, 0.6, 0.6, 1
+			1, 1, 1, 1
+		)
+
+		diffuse = mesh.material.properties["diffuse"]
+
+		glUniform4f(
+			glGetUniformLocation(shader, "color"), * diffuse, 1
 		)
 
 		glUniform4f(
@@ -138,7 +148,7 @@ i = glm.mat4()
 def createTheMatrix(counter, x, y):
 	translate = glm.translate(i, glm.vec3(counter, 0, 0))
 	rotate = glm.rotate(i, glm.radians(90), glm.vec3(0, 1, 0))
-	scale = glm.scale(i, glm.vec3(10, 10, 10))
+	scale = glm.scale(i, glm.vec3(5, 5, 5))
 
 	model = translate * rotate * scale
 	view = glm.lookAt(glm.vec3(0 + x, 0 + y, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
@@ -183,7 +193,7 @@ while running:
 		if event.type == pygame.QUIT:
 			running = False
 		elif event.type == pygame.KEYDOWN:
-			print('keydown')
+			#print('keydown')
 			if event.key == pygame.K_w:
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 			if event.key == pygame.K_f:
