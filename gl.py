@@ -21,14 +21,10 @@ uniform vec3 light;
 
 out float intensity;
 out vec2 vertexTexcoords;
-out vec3 lPosition;
-out vec3 fNormal;
 
 void main()
 {
 	vertexTexcoords = texcoords;
-	lPosition = position;
-	fNormal = normal;
 	intensity = dot(normal, normalize(light));
 	gl_Position = theMatrix * vec4(position.x, position.y, position.z, 1.0);
 }
@@ -40,8 +36,6 @@ layout(location = 0) out vec4 fragColor;
 
 in float intensity;
 in vec2 vertexTexcoords;
-in vec3 lPosition;
-in vec3 fNormal;
 
 uniform sampler2D tex;
 uniform vec4 diffuse;
@@ -49,7 +43,8 @@ uniform vec4 ambient;
 
 void main()
 {
-	fragColor = vec4(cross(fNormal, lPosition), 1.0);
+
+	fragColor = ambient + diffuse * texture(tex, vertexTexcoords) * intensity;
 }
 """
 
@@ -58,31 +53,35 @@ shader = compileProgram(
 		compileShader(fragment_shader, GL_FRAGMENT_SHADER)
 )
 
-scene = pyassimp.load('./TropicalFish15.obj')
+scene = pyassimp.load('./Castle/Castle OBJ.obj')
 
-texture_surface = pygame.image.load('./TropicalFish15.bmp')
-texture_data = pygame.image.tostring(texture_surface, 'RGB')
-width = texture_surface.get_width()
-height = texture_surface.get_height()
-
-texture = glGenTextures(1)
-glBindTexture(GL_TEXTURE_2D, texture)
-glTexImage2D(
-	GL_TEXTURE_2D,
-	0,
-	GL_RGB,
-	width,
-	height,
-	0,
-	GL_RGB,
-	GL_UNSIGNED_BYTE,
-	texture_data
-)
-glGenerateMipmap(GL_TEXTURE_2D)
 
 def glize(node):
 	# render
 	for mesh in node.meshes:
+		material = dict(mesh.material.properties.items())
+		texture_name = material['file'][:-9]
+		#print(texture_name[:-9])
+		texture_surface = pygame.image.load('./Castle/Texture/'+texture_name)
+		texture_data = pygame.image.tostring(texture_surface, 'RGB')
+		width = texture_surface.get_width()
+		height = texture_surface.get_height()
+
+		texture = glGenTextures(1)
+		glBindTexture(GL_TEXTURE_2D, texture)
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGB,
+			width,
+			height,
+			0,
+			GL_RGB,
+			GL_UNSIGNED_BYTE,
+			texture_data
+		)
+		glGenerateMipmap(GL_TEXTURE_2D)
+		#print(material)
 		vertex_data = numpy.hstack([
 			numpy.array(mesh.vertices, dtype=numpy.float32),
 			numpy.array(mesh.normals, dtype=numpy.float32),
@@ -117,7 +116,7 @@ def glize(node):
 
 		glUniform4f(
 			glGetUniformLocation(shader, "diffuse"),
-			0.7, 0.2, 0, 1
+			0.6, 0.6, 0.6, 1
 		)
 
 		glUniform4f(
@@ -138,8 +137,8 @@ i = glm.mat4()
 
 def createTheMatrix(counter, x, y):
 	translate = glm.translate(i, glm.vec3(counter, 0, 0))
-	rotate = glm.rotate(i, glm.radians(-90), glm.vec3(0, 1, 0))
-	scale = glm.scale(i, glm.vec3(0.3, 0.3, 0.3))
+	rotate = glm.rotate(i, glm.radians(90), glm.vec3(0, 1, 0))
+	scale = glm.scale(i, glm.vec3(10, 10, 10))
 
 	model = translate * rotate * scale
 	view = glm.lookAt(glm.vec3(0 + x, 0 + y, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
