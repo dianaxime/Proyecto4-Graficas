@@ -119,3 +119,68 @@ void main()
 	fragColor = vec4(cross(fNormal, lPosition), 1.0);
 }
 """
+
+
+"""
+precision highp float;
+uniform float time;
+uniform vec2 resolution;
+varying vec3 fPosition;
+varying vec3 lPosition;
+varying vec3 fNormal;
+
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
+void main()
+{
+  /*vec3 light = vec3(-1.0, 0.0, 0.1);
+  float intensity = dot(light, fNormal);
+  
+  gl_FragColor =  vec4(cross(fNormal, lPosition), 1.0);
+  
+  */
+  
+  /*vec2 st = gl_FragCoord.xy/20.0;
+  vec3 color = vec3(0.0);
+    st = fract(st);
+	color = vec3(st,0.0);
+	gl_FragColor = vec4(color,1.0);*/
+  /*vec2 st = gl_FragCoord.xy/20.0;
+  vec3 color = vec3(st.x *0.05, st.y + (st.y * 0.05), dot(fNormal,     fPosition) * 3.14);
+  gl_FragColor = vec4(color,1.0);*/
+  /*float x = gl_FragCoord.x/3.14;
+  float a = floor(1.+sin(x*3.14));
+  float b = floor(1.+sin((x+1.)*3.14));
+  gl_FragColor = vec4( x, a, b, 1.0 );*/
+  /*float x = gl_FragCoord.x/5.0;
+  float a = floor(1.+sin(x));
+  float b = floor(1.+sin((x+1.0)));
+  gl_FragColor = vec4( x, a, b, 1.0 );*/
+  /*vec3 light = vec3(1, 0.0, 1);
+  float intensity = dot(light, fNormal);
+  float tiempo = time * 5.0;
+  
+  float bright =   floor(mod(lPosition.z * tiempo, 5.0) + 1.25);
+  vec4 color = mod(bright, 3.0) > .8 ? vec4(1.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 1.0, 1.0);
+  
+  gl_FragColor =  color * intensity;*/
+  
+  /*float st = 0.25 * time / 5.0;
+  
+  vec3 color = vec3(st, fNormal.y * st, lPosition.z - st);
+
+  gl_FragColor = vec4(color , 1.0);*/
+  
+  //gl_FragColor = vec4(cos(time * 5.0), .5, 0.0, 1.0);
+  /*vec2 st = gl_FragCoord.xy/u_resolution.xy;
+ gl_FragColor = vec4(st.x, .5, 0.0, 1.0);*/
+ 
+ vec3 light = vec3(-1.0, 0.0, 0.1);
+  float intensity = dot(light, fNormal);
+  
+  //gl_FragColor =  vec4(cross(fNormal, lPosition), 1.0);
+ //gl_FragColor = intensity * vec4(cos(time * 0.25), sin(time * 0.14), tan(time * 0.55), 1.0);
+ gl_FragColor = intensity * vec4(0.25, sin(time * 5.15), 0.5, 1.0);
+}
+"""
