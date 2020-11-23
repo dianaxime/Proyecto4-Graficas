@@ -1,3 +1,12 @@
+'''
+Diana Ximena de León Figueroa
+Carne 18607
+Graficas por Computadora
+Proyecto # 4
+23 de noviembre
+'''
+
+
 import pygame
 import numpy
 import glm
@@ -18,22 +27,16 @@ layout (location = 2) in vec2 texcoords;
 
 uniform mat4 theMatrix;
 uniform vec3 light;
-uniform vec4 color;
-varying int opcion;
 
 out float intensity;
 out vec2 vertexTexcoords;
-out vec4 vertexColor;
-flat out uint selectOpcion;
 out vec3 lPosition;
 
 void main()
-{
+{	
 	vertexTexcoords = texcoords;
-	selectOpcion = opcion;
 	lPosition = position;
-	float intensity = dot(normal, normalize(light));
-	vertexColor = color * intensity;
+	float intensity = normalize(dot(normal, light));
 	gl_Position = theMatrix * vec4(position.x, position.y, position.z, 1.0);
 }
 """
@@ -44,8 +47,6 @@ layout(location = 0) out vec4 fragColor;
 
 in float intensity;
 in vec2 vertexTexcoords;
-in vec4 vertexColor;
-flat in uint selectOpcion;
 in vec3 lPosition;
 
 uniform sampler2D tex;
@@ -54,18 +55,7 @@ uniform vec4 ambient;
 
 void main()
 {
-	switch (selectOpcion)
-	{
-		case 0:
-			fragColor = texture(tex, vertexTexcoords);
-		break;
-		case 1:
-			fragColor = vec4(lPosition.x * 5.0, lPosition.y * 8.0, lPosition.z * 5.0, 1.0) * intensity;
-		break;
-		default:
-			fragColor = vec4(1.0, 0.0, 0.0, 0.0);
-	}
-	// fragColor = ambient + diffuse * texture(tex, vertexTexcoords) * intensity;
+	fragColor = texture(tex, vertexTexcoords);
 }
 """
 
@@ -75,8 +65,6 @@ layout(location = 0) out vec4 fragColor;
 
 in float intensity;
 in vec2 vertexTexcoords;
-in vec4 vertexColor;
-flat in uint selectOpcion;
 in vec3 lPosition;
 
 uniform sampler2D tex;
@@ -85,7 +73,7 @@ uniform vec4 ambient;
 
 void main()
 {
-	fragColor = vec4(lPosition.x * 5.0, lPosition.y * 8.0, lPosition.z * 5.0, 1.0);
+	fragColor = vec4(lPosition.x * 5.0, lPosition.y * 8.0, lPosition.z * 5.0, 1.0) * intensity;
 }
 """
 
@@ -96,7 +84,7 @@ shader = compileProgram(
 
 scene = pyassimp.load('./sofa/ikea-stocksund-sofa.obj')
 
-def glize(node, opcion):
+def glize(node):
 	# render
 	for mesh in node.meshes:
 		material = dict(mesh.material.properties.items())
@@ -160,29 +148,15 @@ def glize(node, opcion):
 			1, 1, 1, 1
 		)
 
-		diffuse = mesh.material.properties["diffuse"]
-
-		glUniform4f(
-			glGetUniformLocation(shader, "color"), * diffuse, 1
-		)
-
 		glUniform4f(
 			glGetUniformLocation(shader, "ambient"),
 			0.2, 0.2, 0.2, 1
 		)
 
-		glUniform1i(
-			glGetUniformLocation(shader, "opcion"),
-			opcion
-		)
-
-
 		glDrawElements(GL_TRIANGLES, len(index_data), GL_UNSIGNED_INT, None)
 
 	for child in node.children:
-		glize(child, opcion)
-
-
+		glize(child)
 
 
 i = glm.mat4()
@@ -207,7 +181,6 @@ paused = True
 counter = 0
 x = 0
 y = 0
-opcion = 1
 while running:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	glClearColor(0.04, 0.37, 0.89, 1.0)
@@ -228,7 +201,7 @@ while running:
 	# glDrawArrays(GL_TRIANGLES, 0, 3)
 	# glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, None)
 
-	glize(scene.rootnode, opcion)
+	glize(scene.rootnode)
 
 	pygame.display.flip()
 
@@ -236,7 +209,6 @@ while running:
 		if event.type == pygame.QUIT:
 			running = False
 		elif event.type == pygame.KEYDOWN:
-			#print('keydown')
 			if event.key == pygame.K_w:
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 			if event.key == pygame.K_f:
