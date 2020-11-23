@@ -27,7 +27,7 @@ out vec4 vertexColor;
 void main()
 {
 	vertexTexcoords = texcoords;
-	float intensity = dot(normal, normalize(light - position));
+	float intensity = dot(normal, normalize(light));
 	vertexColor = color * intensity;
 	gl_Position = theMatrix * vec4(position.x, position.y, position.z, 1.0);
 }
@@ -58,43 +58,15 @@ shader = compileProgram(
 		compileShader(fragment_shader, GL_FRAGMENT_SHADER)
 )
 
-#scene = pyassimp.load('./Castle/Castle OBJ.obj')
-#scene = pyassimp.load('./space/space-shuttle-orbiter.obj')
-#scene = pyassimp.load('./TropicalFish15.obj')
-#scene = pyassimp.load('./tower/towers.obj')
 scene = pyassimp.load('./sofa/ikea-stocksund-sofa.obj')
-"""texture_surface = pygame.image.load('./TropicalFish15.bmp')
-texture_data = pygame.image.tostring(texture_surface, 'RGB')
-width = texture_surface.get_width()
-height = texture_surface.get_height()
-
-texture = glGenTextures(1)
-glBindTexture(GL_TEXTURE_2D, texture)
-glTexImage2D(
-	GL_TEXTURE_2D,
-	0,
-	GL_RGB,
-	width,
-	height,
-	0,
-	GL_RGB,
-	GL_UNSIGNED_BYTE,
-	texture_data
-)
-glGenerateMipmap(GL_TEXTURE_2D)"""
 
 def glize(node):
 	# render
 	for mesh in node.meshes:
 		material = dict(mesh.material.properties.items())
 		try:
-			#texture_name = material['file'][:-18].rstrip() + '.jpg'
-			#print(material)
 			texture_name = material['file']
-			#print(texture_name)
-			#print(material)
 			texture_surface = pygame.image.load('./sofa/'+ texture_name)
-			#texture_surface = pygame.image.load('./TropicalFish15.bmp')
 			texture_data = pygame.image.tostring(texture_surface, 'RGB')
 			width = texture_surface.get_width()
 			height = texture_surface.get_height()
@@ -175,9 +147,9 @@ def glize(node):
 i = glm.mat4()
 
 def createTheMatrix(counter, x, y):
-	translate = glm.translate(i, glm.vec3(counter, 0, 0))
-	rotate = glm.rotate(i, glm.radians(0), glm.vec3(0, 1, 0))
-	scale = glm.scale(i, glm.vec3(1, 1, 1))
+	translate = glm.translate(i, glm.vec3(0, -100, 0))
+	rotate = glm.rotate(i, glm.radians(counter), glm.vec3(0, 1, 0))
+	scale = glm.scale(i, glm.vec3(2, 2, 2))
 
 	model = translate * rotate * scale
 	view = glm.lookAt(glm.vec3(0 + x, 0 + y, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
@@ -190,7 +162,7 @@ glViewport(0, 0, 800, 600)
 glEnable(GL_DEPTH_TEST)
 
 running = True
-paused = False
+paused = True
 counter = 0
 x = 0
 y = 0
