@@ -19,14 +19,19 @@ layout (location = 2) in vec2 texcoords;
 uniform mat4 theMatrix;
 uniform vec3 light;
 uniform vec4 color;
+varying int opcion;
 
 out float intensity;
 out vec2 vertexTexcoords;
 out vec4 vertexColor;
+flat out uint selectOpcion;
+out vec3 lPosition;
 
 void main()
 {
 	vertexTexcoords = texcoords;
+	selectOpcion = opcion;
+	lPosition = position;
 	float intensity = dot(normal, normalize(light));
 	vertexColor = color * intensity;
 	gl_Position = theMatrix * vec4(position.x, position.y, position.z, 1.0);
@@ -40,6 +45,8 @@ layout(location = 0) out vec4 fragColor;
 in float intensity;
 in vec2 vertexTexcoords;
 in vec4 vertexColor;
+flat in uint selectOpcion;
+in vec3 lPosition;
 
 uniform sampler2D tex;
 uniform vec4 diffuse;
@@ -47,20 +54,49 @@ uniform vec4 ambient;
 
 void main()
 {
-
+	switch (selectOpcion)
+	{
+		case 0:
+			fragColor = texture(tex, vertexTexcoords);
+		break;
+		case 1:
+			fragColor = vec4(lPosition.x * 5.0, lPosition.y * 8.0, lPosition.z * 5.0, 1.0) * intensity;
+		break;
+		default:
+			fragColor = vec4(1.0, 0.0, 0.0, 0.0);
+	}
 	// fragColor = ambient + diffuse * texture(tex, vertexTexcoords) * intensity;
-	fragColor = texture(tex, vertexTexcoords);
+}
+"""
+
+otro_shader = """
+#version 460
+layout(location = 0) out vec4 fragColor;
+
+in float intensity;
+in vec2 vertexTexcoords;
+in vec4 vertexColor;
+flat in uint selectOpcion;
+in vec3 lPosition;
+
+uniform sampler2D tex;
+uniform vec4 diffuse;
+uniform vec4 ambient;
+
+void main()
+{
+	fragColor = vec4(lPosition.x * 5.0, lPosition.y * 8.0, lPosition.z * 5.0, 1.0);
 }
 """
 
 shader = compileProgram(
 		compileShader(vertex_shader, GL_VERTEX_SHADER),
-		compileShader(fragment_shader, GL_FRAGMENT_SHADER)
+		compileShader(otro_shader, GL_FRAGMENT_SHADER)
 )
 
 scene = pyassimp.load('./sofa/ikea-stocksund-sofa.obj')
 
-def glize(node):
+def glize(node, opcion):
 	# render
 	for mesh in node.meshes:
 		material = dict(mesh.material.properties.items())
@@ -87,12 +123,12 @@ def glize(node):
 			glGenerateMipmap(GL_TEXTURE_2D)
 		except:
 			pass
+		
 		vertex_data = numpy.hstack([
 			numpy.array(mesh.vertices, dtype=numpy.float32),
 			numpy.array(mesh.normals, dtype=numpy.float32),
 			numpy.array(mesh.texturecoords[0], dtype=numpy.float32),
 		])
-
 
 		index_data = numpy.hstack(
 			numpy.array(mesh.faces, dtype=numpy.int32),
@@ -135,11 +171,16 @@ def glize(node):
 			0.2, 0.2, 0.2, 1
 		)
 
+		glUniform1i(
+			glGetUniformLocation(shader, "opcion"),
+			opcion
+		)
+
 
 		glDrawElements(GL_TRIANGLES, len(index_data), GL_UNSIGNED_INT, None)
 
 	for child in node.children:
-		glize(child)
+		glize(child, opcion)
 
 
 
@@ -166,6 +207,7 @@ paused = True
 counter = 0
 x = 0
 y = 0
+opcion = 1
 while running:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	glClearColor(0.04, 0.37, 0.89, 1.0)
@@ -186,7 +228,7 @@ while running:
 	# glDrawArrays(GL_TRIANGLES, 0, 3)
 	# glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, None)
 
-	glize(scene.rootnode)
+	glize(scene.rootnode, opcion)
 
 	pygame.display.flip()
 
@@ -209,6 +251,18 @@ while running:
 				y -= 10
 			if event.key == pygame.K_SPACE:
 				paused = not paused
+			if event.key == pygame.K_a:
+				shader = compileProgram(
+						compileShader(vertex_shader, GL_VERTEX_SHADER),
+						compileShader(fragment_shader, GL_FRAGMENT_SHADER)
+				)
+				glUseProgram(shader)
+			if event.key == pygame.K_b:
+				shader = compileProgram(
+						compileShader(vertex_shader, GL_VERTEX_SHADER),
+						compileShader(otro_shader, GL_FRAGMENT_SHADER)
+				)
+				glUseProgram(shader)
 
 	if not paused:
 		counter += 1
