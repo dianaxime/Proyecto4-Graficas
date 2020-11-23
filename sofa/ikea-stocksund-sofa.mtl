@@ -1,0 +1,54 @@
+# Blender MTL File: 'None'
+# Material Count: 5
+
+newmtl Fabric
+Ns 96.078431
+Ka 0.247059 0.247059 0.247059
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Bump Fabric KR2_b.JPG
+map_Kd Fabric KR2_b.JPG
+
+newmtl LEG
+Ns 96.078431
+Ka 0.247059 0.247059 0.247059
+Kd 1.000000 1.000000 1.000000
+Ks 0.032941 0.032941 0.032941
+Ni 1.000000
+d 1.000000
+illum 2
+map_Bump WoodBlack.jpg
+map_Kd WoodBlack.jpg
+
+newmtl Pillow_1
+Ns 96.078431
+Ka 0.247059 0.247059 0.247059
+Kd 0.729412 0.729412 0.729412
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd Pillow_01.jpg
+
+newmtl Pillow_2
+Ns 96.078431
+Ka 0.247059 0.247059 0.247059
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd Pillow_02.jpg
+
+newmtl Throw_Fabric
+Ns 96.078431
+Ka 0.247059 0.247059 0.247059
+Kd 1.000000 1.000000 1.000000
+Ks 0.010000 0.010000 0.010000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd Throw_Fabric.jpg

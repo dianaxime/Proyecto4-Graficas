@@ -48,7 +48,8 @@ uniform vec4 ambient;
 void main()
 {
 
-	fragColor = vertexColor * texture(tex, vertexTexcoords);
+	// fragColor = ambient + diffuse * texture(tex, vertexTexcoords) * intensity;
+	fragColor = texture(tex, vertexTexcoords);
 }
 """
 
@@ -57,35 +58,63 @@ shader = compileProgram(
 		compileShader(fragment_shader, GL_FRAGMENT_SHADER)
 )
 
-scene = pyassimp.load('./Castle/Castle OBJ.obj')
+#scene = pyassimp.load('./Castle/Castle OBJ.obj')
+#scene = pyassimp.load('./space/space-shuttle-orbiter.obj')
+#scene = pyassimp.load('./TropicalFish15.obj')
+#scene = pyassimp.load('./tower/towers.obj')
+scene = pyassimp.load('./sofa/ikea-stocksund-sofa.obj')
+"""texture_surface = pygame.image.load('./TropicalFish15.bmp')
+texture_data = pygame.image.tostring(texture_surface, 'RGB')
+width = texture_surface.get_width()
+height = texture_surface.get_height()
 
+texture = glGenTextures(1)
+glBindTexture(GL_TEXTURE_2D, texture)
+glTexImage2D(
+	GL_TEXTURE_2D,
+	0,
+	GL_RGB,
+	width,
+	height,
+	0,
+	GL_RGB,
+	GL_UNSIGNED_BYTE,
+	texture_data
+)
+glGenerateMipmap(GL_TEXTURE_2D)"""
 
 def glize(node):
 	# render
 	for mesh in node.meshes:
 		material = dict(mesh.material.properties.items())
-		texture_name = material['file'][:-18].rstrip() + '.jpg'
-		#print(texture_name)
-		texture_surface = pygame.image.load('./Castle/Texture/'+ texture_name)
-		texture_data = pygame.image.tostring(texture_surface, 'RGB')
-		width = texture_surface.get_width()
-		height = texture_surface.get_height()
+		try:
+			#texture_name = material['file'][:-18].rstrip() + '.jpg'
+			#print(material)
+			texture_name = material['file']
+			#print(texture_name)
+			#print(material)
+			texture_surface = pygame.image.load('./sofa/'+ texture_name)
+			#texture_surface = pygame.image.load('./TropicalFish15.bmp')
+			texture_data = pygame.image.tostring(texture_surface, 'RGB')
+			width = texture_surface.get_width()
+			height = texture_surface.get_height()
 
-		texture = glGenTextures(1)
-		glBindTexture(GL_TEXTURE_2D, texture)
-		glTexImage2D(
-			GL_TEXTURE_2D,
-			0,
-			GL_RGB,
-			width,
-			height,
-			0,
-			GL_RGB,
-			GL_UNSIGNED_BYTE,
-			texture_data
-		)
-		glGenerateMipmap(GL_TEXTURE_2D)
-		#print(material)
+			texture = glGenTextures(1)
+			glBindTexture(GL_TEXTURE_2D, texture)
+			glTexImage2D(
+				GL_TEXTURE_2D,
+				0,
+				GL_RGB,
+				width,
+				height,
+				0,
+				GL_RGB,
+				GL_UNSIGNED_BYTE,
+				texture_data
+			)
+			glGenerateMipmap(GL_TEXTURE_2D)
+		except:
+			pass
 		vertex_data = numpy.hstack([
 			numpy.array(mesh.vertices, dtype=numpy.float32),
 			numpy.array(mesh.normals, dtype=numpy.float32),
@@ -147,8 +176,8 @@ i = glm.mat4()
 
 def createTheMatrix(counter, x, y):
 	translate = glm.translate(i, glm.vec3(counter, 0, 0))
-	rotate = glm.rotate(i, glm.radians(90), glm.vec3(0, 1, 0))
-	scale = glm.scale(i, glm.vec3(5, 5, 5))
+	rotate = glm.rotate(i, glm.radians(0), glm.vec3(0, 1, 0))
+	scale = glm.scale(i, glm.vec3(1, 1, 1))
 
 	model = translate * rotate * scale
 	view = glm.lookAt(glm.vec3(0 + x, 0 + y, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
