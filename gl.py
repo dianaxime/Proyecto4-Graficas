@@ -26,17 +26,22 @@ layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 texcoords;
 
 uniform mat4 theMatrix;
+uniform mat4 normalMatrix;
 uniform vec3 light;
 
 out float intensity;
+out float intensity2;
 out vec2 vertexTexcoords;
 out vec3 lPosition;
+out vec4 fNormal;
 
 void main()
 {	
 	vertexTexcoords = texcoords;
 	lPosition = position;
-	float intensity = normalize(dot(normal, light));
+	fNormal = normalize(normalMatrix * vec4(normal, 1.0));
+	intensity2 = dot(vec4(light, 1.0), fNormal);
+	intensity = dot(normal, normalize(light));
 	gl_Position = theMatrix * vec4(position.x, position.y, position.z, 1.0);
 }
 """
@@ -46,8 +51,10 @@ fragment_shader = """
 layout(location = 0) out vec4 fragColor;
 
 in float intensity;
+in float intensity2;
 in vec2 vertexTexcoords;
 in vec3 lPosition;
+in vec4 fNormal;
 
 uniform sampler2D tex;
 uniform vec4 diffuse;
@@ -64,8 +71,10 @@ otro_shader = """
 layout(location = 0) out vec4 fragColor;
 
 in float intensity;
+in float intensity2;
 in vec2 vertexTexcoords;
 in vec3 lPosition;
+in vec4 fNormal;
 
 uniform sampler2D tex;
 uniform vec4 diffuse;
@@ -140,7 +149,7 @@ def glize(node):
 
 		glUniform3f(
 			glGetUniformLocation(shader, "light"),
-			-100, 150, 160
+			-100, 300, 0
 		)
 
 		glUniform4f(
@@ -169,8 +178,8 @@ def createTheMatrix(counter, x, y):
 	model = translate * rotate * scale
 	view = glm.lookAt(glm.vec3(0 + x, 0 + y, 500), glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
 	projection = glm.perspective(glm.radians(45), 800/600, 0.1, 1000)
-
-	return projection * view * model
+	modelView = view * model
+	return glm.transpose(glm.inverse(modelView)), projection * modelView
 
 glViewport(0, 0, 800, 600)
 
@@ -178,16 +187,16 @@ glEnable(GL_DEPTH_TEST)
 
 running = True
 paused = True
-counter = 0
+counter = 45
 x = 0
 y = 0
 while running:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-	glClearColor(0.04, 0.37, 0.89, 1.0)
+	glClearColor(0.0, 0.0, 0.0, 1.0)
 
 	glUseProgram(shader)
 
-	theMatrix = createTheMatrix(counter, x, y)
+	normalMatrix, theMatrix = createTheMatrix(counter, x, y)
 
 	theMatrixLocation = glGetUniformLocation(shader, 'theMatrix')
 
@@ -196,6 +205,15 @@ while running:
 		1, # count
 		GL_FALSE,
 		glm.value_ptr(theMatrix)
+	)
+
+	normalMatrixLocation = glGetUniformLocation(shader, 'normalMatrix')
+
+	glUniformMatrix4fv(
+		normalMatrixLocation, # location
+		1, # count
+		GL_FALSE,
+		glm.value_ptr(normalMatrix)
 	)
 
 	# glDrawArrays(GL_TRIANGLES, 0, 3)
