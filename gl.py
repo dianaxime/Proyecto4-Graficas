@@ -6,11 +6,11 @@ Proyecto # 4
 23 de noviembre
 '''
 
-
 import pygame
 import numpy
 import glm
 import pyassimp
+import time
 
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
@@ -28,17 +28,20 @@ layout (location = 2) in vec2 texcoords;
 uniform mat4 theMatrix;
 uniform mat4 normalMatrix;
 uniform vec3 light;
+uniform float timer;
 
 out float intensity;
 out float intensity2;
 out vec2 vertexTexcoords;
 out vec3 lPosition;
 out vec4 fNormal;
+out float time;
 
 void main()
 {	
 	vertexTexcoords = texcoords;
 	lPosition = position;
+	time = timer;
 	fNormal = normalize(normalMatrix * vec4(normal, 1.0));
 	intensity2 = dot(vec4(light, 1.0), fNormal);
 	intensity = dot(normal, normalize(light));
@@ -55,6 +58,7 @@ in float intensity2;
 in vec2 vertexTexcoords;
 in vec3 lPosition;
 in vec4 fNormal;
+in float time;
 
 uniform sampler2D tex;
 uniform vec4 diffuse;
@@ -75,6 +79,7 @@ in float intensity2;
 in vec2 vertexTexcoords;
 in vec3 lPosition;
 in vec4 fNormal;
+in float time;
 
 uniform sampler2D tex;
 uniform vec4 diffuse;
@@ -83,6 +88,128 @@ uniform vec4 ambient;
 void main()
 {
 	fragColor = vec4(lPosition.x * 5.0, lPosition.y * 8.0, lPosition.z * 5.0, 1.0) * intensity;
+}
+"""
+
+time_shader = """
+#version 460
+layout(location = 0) out vec4 fragColor;
+
+in float intensity;
+in float intensity2;
+in vec2 vertexTexcoords;
+in vec3 lPosition;
+in vec4 fNormal;
+in float time;
+
+uniform sampler2D tex;
+uniform vec4 diffuse;
+uniform vec4 ambient;
+
+void main()
+{
+	gl_FragColor = intensity * vec4(cos(time * 5.0), sin(time * 2.0), tan(time * 3.0), 1.0);
+}
+"""
+
+impact_shader = """
+#version 460
+layout(location = 0) out vec4 fragColor;
+
+in float intensity;
+in float intensity2;
+in vec2 vertexTexcoords;
+in vec3 lPosition;
+in vec4 fNormal;
+in float time;
+
+uniform sampler2D tex;
+uniform vec4 diffuse;
+uniform vec4 ambient;
+
+void main()
+{
+	float bright =   floor(mod(lPosition.z * time, 5.0) + 1.25);
+	gl_FragColor =  mod(bright, 3.0) > .8 ? vec4(1.0, 1.0, 0.0, 1.0) * intensity2 : vec4(1.0, 0.0, 1.0, 1.0) * intensity2;
+}
+"""
+
+cuadrado_shader = """
+#version 460
+layout(location = 0) out vec4 fragColor;
+
+in float intensity;
+in float intensity2;
+in vec2 vertexTexcoords;
+in vec3 lPosition;
+in vec4 fNormal;
+in float time;
+
+uniform sampler2D tex;
+uniform vec4 diffuse;
+uniform vec4 ambient;
+
+void main()
+{
+	vec2 st = gl_FragCoord.xy/20.0;
+	vec3 color = vec3(0.0);
+    st = fract(st);
+	color = vec3(st,0.0);
+	gl_FragColor = vec4(color,1.0) * intensity2;
+}
+"""
+
+multicolor_shader = """
+#version 460
+layout(location = 0) out vec4 fragColor;
+
+in float intensity;
+in float intensity2;
+in vec2 vertexTexcoords;
+in vec3 lPosition;
+in vec4 fNormal;
+in float time;
+
+uniform sampler2D tex;
+uniform vec4 diffuse;
+uniform vec4 ambient;
+
+void main()
+{
+	gl_FragColor =  vec4(cross(vec3(fNormal.x, fNormal.y, fNormal.z), lPosition), 1.0);
+}
+"""
+
+# El siguiente shader fue extraido de https://graphics.cs.wisc.edu/WP/cs559-sp2016/2016/03/08/glsl-shader-examples/
+
+siren_shader = """
+#version 460
+layout(location = 0) out vec4 fragColor;
+
+in float intensity;
+in float intensity2;
+in vec2 vertexTexcoords;
+in vec3 lPosition;
+in vec4 fNormal;
+in float time;
+
+uniform sampler2D tex;
+uniform vec4 diffuse;
+uniform vec4 ambient;
+
+void main()
+{
+	vec3 color = vec3(0.0, 0.0, 0.0);
+	
+	if( abs(mod( abs(lPosition.x), abs(.2 * sin(time * 10.0) )   )) < .1){
+		color.x = 1.0;
+	}
+	
+	
+	if( abs(mod(lPosition.z, .2 * sin(time * 10.0 + 1.0))) < .1){
+		color.z = 1.0;
+	}
+	gl_FragColor = vec4(color, 1.0) * intensity2;
 }
 """
 
@@ -190,6 +317,7 @@ paused = True
 counter = 45
 x = 0
 y = 0
+tiempo = 0
 while running:
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	glClearColor(0.0, 0.0, 0.0, 1.0)
@@ -214,6 +342,13 @@ while running:
 		1, # count
 		GL_FALSE,
 		glm.value_ptr(normalMatrix)
+	)
+	
+	tiempo += 0.5
+	
+	glUniform1f(
+		glGetUniformLocation(shader, 'timer'),
+		tiempo
 	)
 
 	# glDrawArrays(GL_TRIANGLES, 0, 3)
@@ -241,16 +376,46 @@ while running:
 				y -= 10
 			if event.key == pygame.K_SPACE:
 				paused = not paused
-			if event.key == pygame.K_a:
+			if event.key == pygame.K_0:
+				shader = compileProgram(
+						compileShader(vertex_shader, GL_VERTEX_SHADER),
+						compileShader(otro_shader, GL_FRAGMENT_SHADER)
+				)
+				glUseProgram(shader)
+			if event.key == pygame.K_1:
 				shader = compileProgram(
 						compileShader(vertex_shader, GL_VERTEX_SHADER),
 						compileShader(fragment_shader, GL_FRAGMENT_SHADER)
 				)
 				glUseProgram(shader)
-			if event.key == pygame.K_b:
+			if event.key == pygame.K_2:
 				shader = compileProgram(
 						compileShader(vertex_shader, GL_VERTEX_SHADER),
-						compileShader(otro_shader, GL_FRAGMENT_SHADER)
+						compileShader(time_shader, GL_FRAGMENT_SHADER)
+				)
+				glUseProgram(shader)
+			if event.key == pygame.K_3:
+				shader = compileProgram(
+						compileShader(vertex_shader, GL_VERTEX_SHADER),
+						compileShader(impact_shader, GL_FRAGMENT_SHADER)
+				)
+				glUseProgram(shader)
+			if event.key == pygame.K_4:
+				shader = compileProgram(
+						compileShader(vertex_shader, GL_VERTEX_SHADER),
+						compileShader(cuadrado_shader, GL_FRAGMENT_SHADER)
+				)
+				glUseProgram(shader)
+			if event.key == pygame.K_5:
+				shader = compileProgram(
+						compileShader(vertex_shader, GL_VERTEX_SHADER),
+						compileShader(multicolor_shader, GL_FRAGMENT_SHADER)
+				)
+				glUseProgram(shader)
+			if event.key == pygame.K_6:
+				shader = compileProgram(
+						compileShader(vertex_shader, GL_VERTEX_SHADER),
+						compileShader(siren_shader, GL_FRAGMENT_SHADER)
 				)
 				glUseProgram(shader)
 
